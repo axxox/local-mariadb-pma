@@ -1,0 +1,38 @@
+version: '3.7'
+
+services:
+        db:
+                container_name: local_db
+                # Maria 10.4
+                image: mariadb@sha256:6f1faac314874361a45fc946c37ba5c597ecba647666156bde783ef088d1c184
+                networks:
+                        localdb:
+                                ipv4_address: 192.168.0.2
+                environment:
+                        - MYSQL_ROOT_PASSWORD=root
+                volumes:
+                        - ./.data:/var/lib/mysql
+                        - ./docker/db/conf.d:/etc/mysql/conf.d
+
+        pma:
+                container_name: local_pma
+                image: phpmyadmin/phpmyadmin@sha256:d4aeb7883319b28578f3be2ecfdf1f9d2690433f2a3a23896a742a3426bf2a73
+                depends_on:
+                        - db
+                networks:
+                        localdb:
+                                ipv4_address: 192.168.0.3
+                environment:
+                        - PMA_HOST=db
+                        - PMA_USER=root
+                        - PMA_PASSWORD=root
+                volumes:
+                        - ./docker/pma/config.user.inc.php:/etc/phpmyadmin/config.user.inc.php
+
+networks:
+        localdb:
+                driver: bridge
+                ipam:
+                        driver: default
+                        config:
+                            - subnet: 192.168.0.0/24
